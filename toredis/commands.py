@@ -84,6 +84,26 @@ class RedisCommandsMixin(object):
             args.extend(keys)
         self.send_message(args, callback)
 
+    def bitpos(self, key, bit, start=None, end=None, callback=None):
+        """
+        Find first bit set or clear in a string
+
+            :param key:
+            :param bit:
+            :param start:
+            :param end:
+
+        Complexity
+        ----------
+        O(N)
+        """
+        args = ["BITPOS"]
+        args.append(key)
+        args.append(bit)
+        args.append(start)
+        args.append(end)
+        self.send_message(args, callback)
+
     def blpop(self, keys, timeout, callback=None):
         """
         Remove and get the first element in a list, or block until one is
@@ -145,11 +165,25 @@ class RedisCommandsMixin(object):
         args.append(timeout)
         self.send_message(args, callback)
 
-    def client_kill(self, ip_port, callback=None):
+    def client_getname(self, callback=None):
+        """
+        Get the current connection name
+
+        Complexity
+        ----------
+        O(1)
+        """
+        self.send_message(["CLIENT", "GETNAME"], callback)
+
+    def client_kill(self, ip_port=None, id=None, type=None, addr=None, skipme=None, callback=None):
         """
         Kill the connection of a client
 
             :param ip_port:
+            :param id:
+            :param type:
+            :param addr:
+            :param skipme:
 
         Complexity
         ----------
@@ -157,6 +191,18 @@ class RedisCommandsMixin(object):
         """
         args = ["CLIENT", "KILL"]
         args.append(ip_port)
+        if id:
+            args.append("ID")
+            args.append(id)
+        if type:
+            args.append("TYPE")
+            args.append(type)
+        if addr:
+            args.append("ADDR")
+            args.append(addr)
+        if skipme:
+            args.append("SKIPME")
+            args.append(skipme)
         self.send_message(args, callback)
 
     def client_list(self, callback=None):
@@ -168,6 +214,92 @@ class RedisCommandsMixin(object):
         O(N) where N is the number of client connections
         """
         self.send_message(["CLIENT", "LIST"], callback)
+
+    def client_pause(self, timeout, callback=None):
+        """
+        Stop processing commands from clients for some time
+
+            :param timeout:
+
+        Complexity
+        ----------
+        O(1)
+        """
+        args = ["CLIENT", "PAUSE"]
+        args.append(timeout)
+        self.send_message(args, callback)
+
+    def client_setname(self, connection_name, callback=None):
+        """
+        Set the current connection name
+
+            :param connection_name:
+
+        Complexity
+        ----------
+        O(1)
+        """
+        args = ["CLIENT", "SETNAME"]
+        args.append(connection_name)
+        self.send_message(args, callback)
+
+    def cluster_slots(self, callback=None):
+        """
+        Get array of Cluster slot to node mappings
+
+        Complexity
+        ----------
+        O(N) where N is the total number of Cluster nodes
+        """
+        self.send_message(["CLUSTER", "SLOTS"], callback)
+
+    def command(self, callback=None):
+        """
+        Get array of Redis command details
+
+        Complexity
+        ----------
+        O(N) where N is the total number of Redis commands
+        """
+        self.send_message(["COMMAND"], callback)
+
+    def command_count(self, callback=None):
+        """
+        Get total number of Redis commands
+
+        Complexity
+        ----------
+        O(1)
+        """
+        self.send_message(["COMMAND", "COUNT"], callback)
+
+    def command_getkeys(self, callback=None):
+        """
+        Extract keys given a full Redis command
+
+        Complexity
+        ----------
+        O(N) where N is the number of arguments to the command
+        """
+        self.send_message(["COMMAND", "GETKEYS"], callback)
+
+    def command_info(self, command_names, callback=None):
+        """
+        Get array of specific Redis command details
+
+            :param command_names:
+                string or list of strings
+
+        Complexity
+        ----------
+        O(N) when N is number of commands to look up
+        """
+        args = ["COMMAND", "INFO"]
+        if isinstance(command_names, string_types):
+            args.append(command_names)
+        else:
+            args.extend(command_names)
+        self.send_message(args, callback)
 
     def config_get(self, parameter, callback=None):
         """
@@ -188,6 +320,12 @@ class RedisCommandsMixin(object):
         O(1)
         """
         self.send_message(["CONFIG", "RESETSTAT"], callback)
+
+    def config_rewrite(self, callback=None):
+        """
+        Rewrite the configuration file with the in memory configuration
+        """
+        self.send_message(["CONFIG", "REWRITE"], callback)
 
     def config_set(self, parameter, value, callback=None):
         """
@@ -662,6 +800,32 @@ class RedisCommandsMixin(object):
             args.append(value)
         self.send_message(args, callback)
 
+    def hscan(self, key, cursor, match=None, count=None, callback=None):
+        """
+        Incrementally iterate hash fields and associated values
+
+            :param key:
+            :param cursor:
+            :param match:
+            :param count:
+
+        Complexity
+        ----------
+        O(1) for every call. O(N) for a complete iteration, including enough
+        command calls for the cursor to return back to 0. N is the number of
+        elements inside the collection..
+        """
+        args = ["HSCAN"]
+        args.append(key)
+        args.append(cursor)
+        if match:
+            args.append("MATCH")
+            args.append(match)
+        if count:
+            args.append("COUNT")
+            args.append(count)
+        self.send_message(args, callback)
+
     def hset(self, key, field, value, callback=None):
         """
         Set the string value of a hash field
@@ -696,6 +860,22 @@ class RedisCommandsMixin(object):
         args.append(key)
         args.append(field)
         args.append(value)
+        self.send_message(args, callback)
+
+    def hstrlen(self, key, field, callback=None):
+        """
+        Get the length of the value of a hash field
+
+            :param key:
+            :param field:
+
+        Complexity
+        ----------
+        O(1)
+        """
+        args = ["HSTRLEN"]
+        args.append(key)
+        args.append(field)
         self.send_message(args, callback)
 
     def hvals(self, key, callback=None):
@@ -758,11 +938,15 @@ class RedisCommandsMixin(object):
         args.append(increment)
         self.send_message(args, callback)
 
-    def info(self, callback=None):
+    def info(self, section=None, callback=None):
         """
         Get information and statistics about the server
+
+            :param section:
         """
-        self.send_message(["INFO"], callback)
+        args = ["INFO"]
+        args.append(section)
+        self.send_message(args, callback)
 
     def keys(self, pattern, callback=None):
         """
@@ -901,8 +1085,9 @@ class RedisCommandsMixin(object):
 
         Complexity
         ----------
-        O(S+N) where S is the start offset and N is the number of elements in
-        the specified range.
+        O(S+N) where S is the distance of start offset from HEAD for small
+        lists, from nearest end (HEAD or TAIL) for large lists; and N is the
+        number of elements in the specified range.
         """
         args = ["LRANGE"]
         args.append(key)
@@ -983,7 +1168,7 @@ class RedisCommandsMixin(object):
             args.extend(keys)
         self.send_message(args, callback)
 
-    def migrate(self, host, port, key, destination_db, timeout, callback=None):
+    def migrate(self, host, port, key, destination_db, timeout, copy=False, replace=False, callback=None):
         """
         Atomically transfer a key from a Redis instance to another one.
 
@@ -992,6 +1177,8 @@ class RedisCommandsMixin(object):
             :param key:
             :param destination_db:
             :param timeout:
+            :param copy:
+            :param replace:
 
         Complexity
         ----------
@@ -1006,6 +1193,10 @@ class RedisCommandsMixin(object):
         args.append(key)
         args.append(destination_db)
         args.append(timeout)
+        if copy:
+            args.append("COPY")
+        if replace:
+            args.append("REPLACE")
         self.send_message(args, callback)
 
     def monitor(self, callback=None):
@@ -1137,6 +1328,67 @@ class RedisCommandsMixin(object):
         args.append(milliseconds_timestamp)
         self.send_message(args, callback)
 
+    def pfadd(self, key, elements, callback=None):
+        """
+        Adds the specified elements to the specified HyperLogLog.
+
+            :param key:
+            :param elements:
+                string or list of strings
+
+        Complexity
+        ----------
+        O(1) to add every element.
+        """
+        args = ["PFADD"]
+        args.append(key)
+        if isinstance(elements, string_types):
+            args.append(elements)
+        else:
+            args.extend(elements)
+        self.send_message(args, callback)
+
+    def pfcount(self, keys, callback=None):
+        """
+        Return the approximated cardinality of the set(s) observed by the
+        HyperLogLog at key(s).
+
+            :param keys:
+                string or list of strings
+
+        Complexity
+        ----------
+        O(1) with every small average constant times when called with a single
+        key. O(N) with N being the number of keys, and much bigger constant
+        times, when called with multiple keys.
+        """
+        args = ["PFCOUNT"]
+        if isinstance(keys, string_types):
+            args.append(keys)
+        else:
+            args.extend(keys)
+        self.send_message(args, callback)
+
+    def pfmerge(self, destkey, sourcekeys, callback=None):
+        """
+        Merge N different HyperLogLogs into a single one.
+
+            :param destkey:
+            :param sourcekeys:
+                string or list of strings
+
+        Complexity
+        ----------
+        O(N) to merge N HyperLogLogs, but with high constant times.
+        """
+        args = ["PFMERGE"]
+        args.append(destkey)
+        if isinstance(sourcekeys, string_types):
+            args.append(sourcekeys)
+        else:
+            args.extend(sourcekeys)
+        self.send_message(args, callback)
+
     def ping(self, callback=None):
         """
         Ping the server
@@ -1212,6 +1464,29 @@ class RedisCommandsMixin(object):
         args.append(message)
         self.send_message(args, callback)
 
+    def pubsub(self, subcommand, arguments=[], callback=None):
+        """
+        Inspect the state of the Pub/Sub subsystem
+
+            :param subcommand:
+            :param arguments:
+                string or list of strings
+
+        Complexity
+        ----------
+        O(N) for the CHANNELS subcommand, where N is the number of active
+        channels, and assuming constant time pattern matching (relatively
+        short channels and patterns). O(N) for the NUMSUB subcommand, where N
+        is the number of requested channels. O(1) for the NUMPAT subcommand.
+        """
+        args = ["PUBSUB"]
+        args.append(subcommand)
+        if isinstance(arguments, string_types):
+            args.append(arguments)
+        else:
+            args.extend(arguments)
+        self.send_message(args, callback)
+
     def punsubscribe(self, patterns=[], callback=None):
         """
         Stop listening for messages posted to channels matching the given
@@ -1281,7 +1556,7 @@ class RedisCommandsMixin(object):
         args.append(newkey)
         self.send_message(args, callback)
 
-    def restore(self, key, ttl, serialized_value, callback=None):
+    def restore(self, key, ttl, serialized_value, replace=False, callback=None):
         """
         Create a key using the provided serialized value, previously obtained
         using DUMP.
@@ -1289,6 +1564,7 @@ class RedisCommandsMixin(object):
             :param key:
             :param ttl:
             :param serialized_value:
+            :param replace:
 
         Complexity
         ----------
@@ -1303,7 +1579,15 @@ class RedisCommandsMixin(object):
         args.append(key)
         args.append(ttl)
         args.append(serialized_value)
+        if replace:
+            args.append("REPLACE")
         self.send_message(args, callback)
+
+    def role(self, callback=None):
+        """
+        Return the role of the instance in the context of replication
+        """
+        self.send_message(["ROLE"], callback)
 
     def rpop(self, key, callback=None):
         """
@@ -1321,7 +1605,7 @@ class RedisCommandsMixin(object):
 
     def rpoplpush(self, source, destination, callback=None):
         """
-        Remove the last element in a list, append it to another list and
+        Remove the last element in a list, prepend it to another list and
         return it
 
             :param source:
@@ -1397,6 +1681,30 @@ class RedisCommandsMixin(object):
         Synchronously save the dataset to disk
         """
         self.send_message(["SAVE"], callback)
+
+    def scan(self, cursor, match=None, count=None, callback=None):
+        """
+        Incrementally iterate the keys space
+
+            :param cursor:
+            :param match:
+            :param count:
+
+        Complexity
+        ----------
+        O(1) for every call. O(N) for a complete iteration, including enough
+        command calls for the cursor to return back to 0. N is the number of
+        elements inside the collection..
+        """
+        args = ["SCAN"]
+        args.append(cursor)
+        if match:
+            args.append("MATCH")
+            args.append(match)
+        if count:
+            args.append("COUNT")
+            args.append(count)
+        self.send_message(args, callback)
 
     def scard(self, key, callback=None):
         """
@@ -1513,12 +1821,15 @@ class RedisCommandsMixin(object):
         args.append(index)
         self.send_message(args, callback)
 
-    def set(self, key, value, callback=None):
+    def set(self, key, value, ex=None, px=None, condition=None, callback=None):
         """
         Set the string value of a key
 
             :param key:
             :param value:
+            :param ex:
+            :param px:
+            :param condition:
 
         Complexity
         ----------
@@ -1527,6 +1838,13 @@ class RedisCommandsMixin(object):
         args = ["SET"]
         args.append(key)
         args.append(value)
+        if ex:
+            args.append("EX")
+            args.append(ex)
+        if px:
+            args.append("PX")
+            args.append(px)
+        args.append(condition)
         self.send_message(args, callback)
 
     def setbit(self, key, offset, value, callback=None):
@@ -1768,11 +2086,12 @@ class RedisCommandsMixin(object):
             args.append(store)
         self.send_message(args, callback)
 
-    def spop(self, key, callback=None):
+    def spop(self, key, count=None, callback=None):
         """
-        Remove and return a random member from a set
+        Remove and return one or multiple random members from a set
 
             :param key:
+            :param count:
 
         Complexity
         ----------
@@ -1780,6 +2099,7 @@ class RedisCommandsMixin(object):
         """
         args = ["SPOP"]
         args.append(key)
+        args.append(count)
         self.send_message(args, callback)
 
     def srandmember(self, key, count=None, callback=None):
@@ -1817,6 +2137,32 @@ class RedisCommandsMixin(object):
             args.append(members)
         else:
             args.extend(members)
+        self.send_message(args, callback)
+
+    def sscan(self, key, cursor, match=None, count=None, callback=None):
+        """
+        Incrementally iterate Set elements
+
+            :param key:
+            :param cursor:
+            :param match:
+            :param count:
+
+        Complexity
+        ----------
+        O(1) for every call. O(N) for a complete iteration, including enough
+        command calls for the cursor to return back to 0. N is the number of
+        elements inside the collection..
+        """
+        args = ["SSCAN"]
+        args.append(key)
+        args.append(cursor)
+        if match:
+            args.append("MATCH")
+            args.append(match)
+        if count:
+            args.append("COUNT")
+            args.append(count)
         self.send_message(args, callback)
 
     def strlen(self, key, callback=None):
@@ -2023,8 +2369,7 @@ class RedisCommandsMixin(object):
 
         Complexity
         ----------
-        O(log(N)+M) with N being the number of elements in the sorted set and
-        M being the number of elements between min and max.
+        O(log(N)) with N being the number of elements in the sorted set.
         """
         args = ["ZCOUNT"]
         args.append(key)
@@ -2082,6 +2427,25 @@ class RedisCommandsMixin(object):
             args.append(aggregate)
         self.send_message(args, callback)
 
+    def zlexcount(self, key, min, max, callback=None):
+        """
+        Count the number of members in a sorted set between a given
+        lexicographical range
+
+            :param key:
+            :param min:
+            :param max:
+
+        Complexity
+        ----------
+        O(log(N)) with N being the number of elements in the sorted set.
+        """
+        args = ["ZLEXCOUNT"]
+        args.append(key)
+        args.append(min)
+        args.append(max)
+        self.send_message(args, callback)
+
     def zrange(self, key, start, stop, withscores=False, callback=None):
         """
         Return a range of members in a sorted set, by index
@@ -2102,6 +2466,33 @@ class RedisCommandsMixin(object):
         args.append(stop)
         if withscores:
             args.append("WITHSCORES")
+        self.send_message(args, callback)
+
+    def zrangebylex(self, key, min, max, limit=None, callback=None):
+        """
+        Return a range of members in a sorted set, by lexicographical range
+
+            :param key:
+            :param min:
+            :param max:
+            :param limit:
+
+        Complexity
+        ----------
+        O(log(N)+M) with N being the number of elements in the sorted set and
+        M the number of elements being returned. If M is constant (e.g. always
+        asking for the first 10 elements with LIMIT), you can consider it
+        O(log(N)).
+        """
+        args = ["ZRANGEBYLEX"]
+        args.append(key)
+        args.append(min)
+        args.append(max)
+        if limit:
+            args.append("LIMIT")
+            offset, count = limit
+            args.append(offset)
+            args.append(count)
         self.send_message(args, callback)
 
     def zrangebyscore(self, key, min, max, withscores=False, limit=None, callback=None):
@@ -2171,6 +2562,26 @@ class RedisCommandsMixin(object):
             args.extend(members)
         self.send_message(args, callback)
 
+    def zremrangebylex(self, key, min, max, callback=None):
+        """
+        Remove all members in a sorted set between the given lexicographical
+        range
+
+            :param key:
+            :param min:
+            :param max:
+
+        Complexity
+        ----------
+        O(log(N)+M) with N being the number of elements in the sorted set and
+        M the number of elements removed by the operation.
+        """
+        args = ["ZREMRANGEBYLEX"]
+        args.append(key)
+        args.append(min)
+        args.append(max)
+        self.send_message(args, callback)
+
     def zremrangebyrank(self, key, start, stop, callback=None):
         """
         Remove all members in a sorted set within the given indexes
@@ -2232,6 +2643,34 @@ class RedisCommandsMixin(object):
             args.append("WITHSCORES")
         self.send_message(args, callback)
 
+    def zrevrangebylex(self, key, max, min, limit=None, callback=None):
+        """
+        Return a range of members in a sorted set, by lexicographical range,
+        ordered from higher to lower strings.
+
+            :param key:
+            :param max:
+            :param min:
+            :param limit:
+
+        Complexity
+        ----------
+        O(log(N)+M) with N being the number of elements in the sorted set and
+        M the number of elements being returned. If M is constant (e.g. always
+        asking for the first 10 elements with LIMIT), you can consider it
+        O(log(N)).
+        """
+        args = ["ZREVRANGEBYLEX"]
+        args.append(key)
+        args.append(max)
+        args.append(min)
+        if limit:
+            args.append("LIMIT")
+            offset, count = limit
+            args.append(offset)
+            args.append(count)
+        self.send_message(args, callback)
+
     def zrevrangebyscore(self, key, max, min, withscores=False, limit=None, callback=None):
         """
         Return a range of members in a sorted set, by score, with scores
@@ -2278,6 +2717,32 @@ class RedisCommandsMixin(object):
         args = ["ZREVRANK"]
         args.append(key)
         args.append(member)
+        self.send_message(args, callback)
+
+    def zscan(self, key, cursor, match=None, count=None, callback=None):
+        """
+        Incrementally iterate sorted sets elements and associated scores
+
+            :param key:
+            :param cursor:
+            :param match:
+            :param count:
+
+        Complexity
+        ----------
+        O(1) for every call. O(N) for a complete iteration, including enough
+        command calls for the cursor to return back to 0. N is the number of
+        elements inside the collection..
+        """
+        args = ["ZSCAN"]
+        args.append(key)
+        args.append(cursor)
+        if match:
+            args.append("MATCH")
+            args.append(match)
+        if count:
+            args.append("COUNT")
+            args.append(count)
         self.send_message(args, callback)
 
     def zscore(self, key, member, callback=None):

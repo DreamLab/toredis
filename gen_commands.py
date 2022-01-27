@@ -77,7 +77,7 @@ def parse_arguments(command, arguments):
                     prefix = ''
 
                 code.append(prefix + '{args}.append("%s")' % arg['command'])
-
+                print(arg)
                 if isinstance(arg['name'], list):
                     code.append(prefix + '%s = %s' % (
                         ', '.join([argname(i) for i in arg['name']]),
