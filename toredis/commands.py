@@ -58,8 +58,10 @@ class RedisCommandsMixin(object):
         """
         args = ["BITCOUNT"]
         args.append(key)
-        args.append(start)
-        args.append(end)
+        if start:
+            args.append(start)
+        if end:
+            args.append(end)
         self.send_message(args, callback)
 
     def bitop(self, operation, destkey, keys, callback=None):
@@ -100,8 +102,10 @@ class RedisCommandsMixin(object):
         args = ["BITPOS"]
         args.append(key)
         args.append(bit)
-        args.append(start)
-        args.append(end)
+        if start:
+            args.append(start)
+        if end:
+            args.append(end)
         self.send_message(args, callback)
 
     def blpop(self, keys, timeout, callback=None):
@@ -190,7 +194,8 @@ class RedisCommandsMixin(object):
         O(N) where N is the number of client connections
         """
         args = ["CLIENT", "KILL"]
-        args.append(ip_port)
+        if ip_port:
+            args.append(ip_port)
         if id:
             args.append("ID")
             args.append(id)
@@ -945,7 +950,8 @@ class RedisCommandsMixin(object):
             :param section:
         """
         args = ["INFO"]
-        args.append(section)
+        if section:
+            args.append(section)
         self.send_message(args, callback)
 
     def keys(self, pattern, callback=None):
@@ -1844,7 +1850,8 @@ class RedisCommandsMixin(object):
         if px:
             args.append("PX")
             args.append(px)
-        args.append(condition)
+        if condition:
+            args.append(condition)
         self.send_message(args, callback)
 
     def setbit(self, key, offset, value, callback=None):
@@ -2011,7 +2018,8 @@ class RedisCommandsMixin(object):
         """
         args = ["SLOWLOG"]
         args.append(subcommand)
-        args.append(argument)
+        if argument:
+            args.append(argument)
         self.send_message(args, callback)
 
     def smembers(self, key, callback=None):
@@ -2078,7 +2086,8 @@ class RedisCommandsMixin(object):
         for pattern in get:
             args.append("GET")
             args.append(pattern)
-        args.append(order)
+        if order:
+            args.append(order)
         if sorting:
             args.append("ALPHA")
         if store:
@@ -2099,7 +2108,8 @@ class RedisCommandsMixin(object):
         """
         args = ["SPOP"]
         args.append(key)
-        args.append(count)
+        if count:
+            args.append(count)
         self.send_message(args, callback)
 
     def srandmember(self, key, count=None, callback=None):
@@ -2116,7 +2126,8 @@ class RedisCommandsMixin(object):
         """
         args = ["SRANDMEMBER"]
         args.append(key)
-        args.append(count)
+        if count:
+            args.append(count)
         self.send_message(args, callback)
 
     def srem(self, key, members, callback=None):

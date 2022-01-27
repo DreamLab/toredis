@@ -169,11 +169,13 @@ def parse_arguments(command, arguments):
             doc.append(':param %s:' % name)
         else:
             name = argname(arg['name'])
-            code.append('{args}.append(%s)' % name)
             if arg.get('optional') == True:
                 args.append('%s=None' % name)
+                code.append('if %s:' % name)
+                code.append('    {args}.append(%s)' % name)
             else:
                 args.append(name)
+                code.append('{args}.append(%s)' % name)
             doc.append(':param %s:' % name)
 
     args.append('callback=None')
